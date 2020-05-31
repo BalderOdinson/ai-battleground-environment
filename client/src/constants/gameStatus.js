@@ -1,0 +1,5 @@
+export const OPEN = "OPEN"
+export const READY = "READY"
+export const IN_PLAY = "IN_PLAY"
+export const CLOSED = "CLOSED"
+export const ENDED = "ENDED"

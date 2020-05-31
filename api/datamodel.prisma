@@ -1,0 +1,133 @@
+type Agent {
+    id: ID! @id
+    name: String! @unique
+    script: String
+    className: String
+    hostGames: [Game!]!  @relation(name: "Host")
+    guestGames: [Game!]!  @relation(name: "Guest")
+    winnedGames: [Game!]! @relation(name: "Winner")
+}
+
+type Game {
+    id: ID! @id
+    gameId: Int!
+    createdAt: DateTime! @createdAt
+    host: Agent! @relation(name: "Host", link: INLINE)
+    guest: Agent @relation(name: "Guest", link: INLINE)
+    playerOneId: ID
+    playerTwoId: ID
+    map: GameMap! @relation(link: INLINE)
+    status: GameStatus! @default(value: OPEN)
+    state: GameState
+    winner: Agent @relation(name: "Winner", link: INLINE)
+    moves: [Move!]!
+}
+
+type GameMap {
+    id: ID! @id
+    name: String! @unique
+}
+
+enum GameStatus {
+    OPEN
+    CLOSED
+    READY
+    IN_PLAY
+    ENDED
+}
+
+type Move {
+    id: ID! @id
+    game: Game! @relation(link: INLINE)
+    player: Agent! @relation(link: INLINE)
+    action: Action
+    actionType: ActionType
+    state: GameState!
+}
+
+enum Action {
+    MOVE_UP
+    MOVE_LEFT
+    MOVE_DOWN
+    MOVE_RIGHT
+    ATTACK_UP
+    ATTACK_LEFT
+    ATTACK_DOWN
+    ATTACK_RIGHT
+    TRANSFORM_NORMAL
+    TRANSFORM_FIRE
+    TRANSFORM_WATER
+    TRANSFORM_GRASS
+}
+
+enum ActionType {
+    MOVE
+    COLLECT
+    TRANSFORM
+    ATTACK
+    RESTORE_HP
+    WAIT
+}
+
+type Map @embedded {
+    tiles: [Tile!]!
+    width: Int!
+    height: Int!
+}
+
+type GameState @embedded {
+    playerTurn: ID!
+    map: Map!
+    player1: Player! @relation(name: "Player1")
+    player2: Player! @relation(name: "Player2")
+}
+
+type Tile @embedded {
+    type: TileType!
+    item: ItemType
+}
+
+enum TileType {
+    NORMAL
+    FIRE
+    WATER
+    GRASS
+}
+
+enum ItemType {
+    OBSTACLE
+    FIRE
+    WATER
+    GRASS
+}
+
+type Player @embedded {
+    x: Int!
+    y: Int!
+    type: Morph!
+    morphItems: [Morph!]!
+    health: Int!
+    lives: Int!
+    lastAction: Action
+}
+
+enum Morph {
+    NEUTRAL
+    FIRE
+    WATER
+    GRASS
+}
+
+type Workstation {
+    id: ID! @id
+    name: String! @unique
+    url: String! @unique
+    privateKey: String!
+    workgroups: [Workgroup!]! @relation(link: INLINE)
+}
+
+type Workgroup {
+    id: ID! @id
+    workstation: Workstation!
+    busy: Boolean! @default(value: false)
+}

@@ -1,0 +1,51 @@
+class GameStatus:
+    OPEN = 'OPEN'
+    CLOSED = 'CLOSED'
+    READY = 'READY'
+    IN_PLAY = 'IN_PLAY'
+    ENDED = 'ENDED'
+
+
+class Action:
+    MOVE_UP = 'MOVE_UP'
+    MOVE_LEFT = 'MOVE_LEFT'
+    MOVE_DOWN = 'MOVE_DOWN'
+    MOVE_RIGHT = 'MOVE_RIGHT'
+    ATTACK_UP = 'ATTACK_UP'
+    ATTACK_LEFT = 'ATTACK_LEFT'
+    ATTACK_DOWN = 'ATTACK_DOWN'
+    ATTACK_RIGHT = 'ATTACK_RIGHT'
+    TRANSFORM_NORMAL = 'TRANSFORM_NORMAL'
+    TRANSFORM_FIRE = 'TRANSFORM_FIRE'
+    TRANSFORM_WATER = 'TRANSFORM_WATER'
+    TRANSFORM_GRASS = 'TRANSFORM_GRASS'
+
+
+class ActionType:
+    MOVE = 'MOVE'
+    COLLECT = 'COLLECT'
+    TRANSFORM = 'TRANSFORM'
+    ATTACK = 'ATTACK'
+    RESTORE_HP = 'RESTORE_HP'
+    WAIT = 'WAIT'
+
+
+class TileType:
+    NORMAL = 'NORMAL'
+    FIRE = 'FIRE'
+    WATER = 'WATER'
+    GRASS = 'GRASS'
+
+
+class ItemType:
+    OBSTACLE = 'OBSTACLE'
+    FIRE = 'FIRE'
+    WATER = 'WATER'
+    GRASS = 'GRASS'
+
+
+class Morph:
+    NEUTRAL = 'NEUTRAL'
+    FIRE = 'FIRE'
+    WATER = 'WATER'
+    GRASS = 'GRASS'

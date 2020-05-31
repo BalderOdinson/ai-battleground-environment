@@ -1,0 +1,193 @@
+type Query {
+    gamesByPlayer(player: String!,
+        filterOlderThen: String,
+        filterNewerThen: String,
+        filterStatus: GameStatus,
+        filterWinner: ID,
+        after: ID, first: Int,
+        orderBy: GameOrderByInput): [Game!]!
+    game(id: ID!): Game
+    games(ids: [ID!], filterStatus: GameStatus, after: ID, first: Int, orderBy: GameOrderByInput): [Game!]!
+    currentUser: Agent!
+    user(id: ID!): Agent
+    bot(id: ID!): Agent
+    bots(filterName: String, after: ID, first: Int): [Agent!]!
+    workstation(id: ID!): Workstation
+    workstations(filterName: String, after: ID, first: Int): [Workstation!]!
+    workgroup(id: ID!): Workgroup
+    workgroups(filterAvailable: Boolean, after: ID, first: Int): [Workgroup!]!
+    maps(filterName: String, after: ID, first: Int): [GameMap!]!
+}
+
+type Mutation {
+    login(name: String!) : AuthPayload
+    hostGame(map: String): Game!
+    joinGame(id: ID!): Game!
+    rejoinGame(id: ID!): Game!
+    startGame(id: ID!): Game!
+    leaveGame(id: ID!): Game!
+    doAction(id: ID!, action: Action, actionType: ActionType): Game!
+    addBot(name: String!, script: String!, className: String!): Agent!
+    addMap(name: String!): GameMap!
+    createGamePlayerVsBot(map: String, bot: ID!, workgroup: ID!) : Game!
+    createGameBotVsBot(map: String, bot1: ID!, bot2: ID!, workgroup1: ID!, workgroup2: ID!): Game!
+    addWorkstation(name: String!, url: String!, numberOfWorkgroups: Int!): Workstation
+    updateWorkstation(id: ID!, url: String!): Workstation
+    scaleUpWorkstation(id: ID!, amount: Int!) : Workstation
+    scaleDownWorkstation(id: ID!, amount: Int!) : Workstation
+    removeWorkstation(id: ID!): Workstation!
+    allocateWorkgroup(id: ID!): Workgroup!
+    terminateWorkgroup(id: ID!): Workgroup!
+    terminateWorkstation(id: ID!): Workstation!
+}
+
+type Subscription {
+    trackGameStatus(id: ID!): Game!
+    trackGames: Game!
+    trackWorkgroupStatus : Workgroup!
+}
+
+enum GameOrderByInput {
+    createdAt_ASC
+    createdAt_DESC
+}
+
+type Agent {
+    id: ID!
+    name: String!
+    isBot: Boolean!
+    script: String
+    className: String
+    gamesPlayed: Int!
+    gamesWon: Int!
+    gamesDraw: Int!
+    gamesLost: Int!
+}
+
+type Game {
+    id: ID!
+    gameId: Int!
+    createdAt: String!
+    host: Agent!
+    guest: Agent
+    playerOneId: ID
+    playerTwoId: ID
+    map: GameMap!
+    status: GameStatus!
+    state: GameState
+    winner: Agent
+    moves: [Move!]!
+}
+
+type GameMap {
+    id: ID!
+    name: String!
+}
+
+enum GameStatus {
+    OPEN
+    CLOSED
+    READY
+    IN_PLAY
+    ENDED
+}
+
+type Move {
+    id: ID!
+    game: Game!
+    player: Agent!
+    action: Action
+    actionType: ActionType
+    state: GameState!
+}
+
+enum Action {
+    MOVE_UP
+    MOVE_LEFT
+    MOVE_DOWN
+    MOVE_RIGHT
+    ATTACK_UP
+    ATTACK_LEFT
+    ATTACK_DOWN
+    ATTACK_RIGHT
+    TRANSFORM_NORMAL
+    TRANSFORM_FIRE
+    TRANSFORM_WATER
+    TRANSFORM_GRASS
+}
+
+enum ActionType {
+    MOVE
+    COLLECT
+    TRANSFORM
+    ATTACK
+    RESTORE_HP
+    WAIT
+}
+
+type Map {
+    tiles: [Tile!]!
+    width: Int!
+    height: Int!
+}
+
+type GameState {
+    playerTurn: ID!
+    map: Map!
+    player1: Player!
+    player2: Player!
+}
+
+type Tile {
+    type: TileType!
+    item: ItemType
+}
+
+enum TileType {
+    NORMAL
+    FIRE
+    WATER
+    GRASS
+}
+
+enum ItemType {
+    OBSTACLE
+    FIRE
+    WATER
+    GRASS
+}
+
+type Player {
+    x: Int!
+    y: Int!
+    type: Morph!
+    morphItems: [Morph!]!
+    health: Int!
+    lives: Int!
+    lastAction: Action
+}
+
+enum Morph {
+    NEUTRAL
+    FIRE
+    WATER
+    GRASS
+}
+
+type Workstation {
+    id: ID!
+    name: String!
+    url: String!
+    workgroups: [Workgroup!]!
+}
+
+type Workgroup {
+    id: ID!
+    workstation: Workstation!
+    busy: Boolean!
+}
+
+type AuthPayload {
+    token: String
+    user: Agent
+}
