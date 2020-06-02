@@ -9,30 +9,17 @@ import Error from "./Error";
 import {useHistory, useParams} from "react-router-dom";
 import {useMutation, useQuery} from "@apollo/react-hooks";
 import * as Query from "../constants/query";
-import Card from "@material-ui/core/Card";
-import CardContent from "@material-ui/core/CardContent";
-import CardHeader from "@material-ui/core/CardHeader";
 import AgentAvatar from "./AgentAvatar";
-import IconButton from "@material-ui/core/IconButton";
-import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
-import Zoom from "@material-ui/core/Zoom";
-import FormControl from "@material-ui/core/FormControl";
-import InputLabel from "@material-ui/core/InputLabel";
-import Select from "@material-ui/core/Select";
-import MenuItem from "@material-ui/core/MenuItem";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import SettingsIcon from '@material-ui/icons/Settings';
-import ExpansionPanel from "@material-ui/core/ExpansionPanel";
-import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
-import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
-import Skeleton from "@material-ui/lab/Skeleton";
 import Iframe from "react-iframe";
 import useWindowDimensions from "../hooks/useWindowDimensions";
-import Grid from "@material-ui/core/Grid";
-import AppBar from "@material-ui/core/AppBar";
-import Toolbar from "@material-ui/core/Toolbar";
-import MenuIcon from '@material-ui/icons/Menu';
+import * as Colors from "../utils/colors"
+import Fab from "@material-ui/core/Fab";
+import ArrowBackIcon from "@material-ui/icons/ArrowBack";
+import * as GameStatus from "../constants/gameStatus"
+import Snackbar from "@material-ui/core/Snackbar";
+import Button from "@material-ui/core/Button";
+import IconButton from "@material-ui/core/IconButton";
+import CloseIcon from '@material-ui/icons/Close';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -58,8 +45,110 @@ const useStyles = makeStyles(theme => ({
         borderRadius: theme.spacing(1),
         flexGrow: 1
     },
-    menuButton: {
-        marginRight: theme.spacing(2),
+    leftBottomPanelFloat: {
+        position: "absolute",
+        bottom: "15%",
+        borderRadius: `25px 25px 25px 25px`,
+        "&>*": {
+            float: "right"
+        },
+        paddingTop: theme.spacing(1),
+        paddingBottom: theme.spacing(1),
+        paddingLeft: theme.spacing(1),
+        left: "5%",
+        border: 1,
+        borderLeft: 1,
+        borderStyle: "solid"
+    },
+    rightBottomPanelFloat: {
+        position: "absolute",
+        [theme.breakpoints.down('md')]: {
+            bottom: "5%"
+        },
+        [theme.breakpoints.up('lg')]: {
+            bottom: "15%"
+        },
+        right: "5%",
+        borderRadius: `25px 25px 25px 25px`,
+        "&>*": {
+            float: "left"
+        },
+        paddingTop: theme.spacing(1),
+        paddingBottom: theme.spacing(1),
+        paddingRight: theme.spacing(1),
+        border: 1,
+        borderRight: 1,
+        borderStyle: "solid"
+    },
+    leftBottomPanel: {
+        position: "absolute",
+        bottom: "15%",
+        borderRadius: `0px 26px 26px 0px`,
+        "&>*": {
+            float: "right"
+        },
+        // paddingTop: theme.spacing(1),
+        // paddingBottom: theme.spacing(1),
+        left: 0,
+        border: 1,
+        borderLeft: 0,
+        borderStyle: "solid"
+    },
+    rightBottomPanel: {
+        position: "absolute",
+        [theme.breakpoints.down('md')]: {
+            bottom: "5%"
+        },
+        [theme.breakpoints.up('lg')]: {
+            bottom: "15%"
+        },
+        right: 0,
+        borderRadius: `26px 0px 0px 26px`,
+        "&>*": {
+            float: "left"
+        },
+        border: 1,
+        borderRight: 0,
+        borderStyle: "solid"
+    },
+    leftPanelText: {
+        height: "100%",
+        padding: theme.spacing(1),
+        paddingRight: theme.spacing(1.5),
+        borderRadius: `0px 26px 26px 0px`,
+        marginTop: -5,
+        border: 1,
+        borderLeft: 0,
+        borderStyle: "solid",
+        boxShadow: "10px 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
+    },
+    rightPanelText: {
+        height: "100%",
+        padding: theme.spacing(1),
+        paddingLeft: theme.spacing(1.5),
+        marginTop: -5,
+        borderRadius: `26px 0px 0px 26px`,
+        border: 1,
+        borderRight: 0,
+        borderStyle: "solid",
+        boxShadow: "0px 4px 8px 10px rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
+    },
+    panelAvatar: {
+        height: 50,
+        width: 50,
+        // marginTop: theme.spacing(-1),
+        // marginBottom: theme.spacing(-1),
+        "&>*": {
+            height: 30,
+            width: 30
+        }
+    },
+    panelText: {
+        margin: "auto",
+        marginLeft: theme.spacing(1),
+        marginRight: theme.spacing(1),
+        padding: theme.spacing(1),
+        textShadow: "2px 2px 4px #000000"
     },
     floatLeft: {
         marginLeft: theme.spacing(1),
@@ -89,12 +178,28 @@ function WatchGame(props) {
     let history = useHistory();
     let {id} = useParams();
     const theme = useTheme()
-    const [entrance, setEntrance] = useState(false)
-    const {loading, error, data} = useQuery(Query.GAME_QUERY, {variables: {id}})
+    const [open, setOpen] = useState(false)
+    const [timeout, setTimeout] = useState(0)
+    const {loading, error, data, subscribeToMore} = useQuery(
+        Query.GAME_QUERY,
+        {
+            variables: {id}, onCompleted: d => {
+                subscribeToMore({
+                    document: Query.SUBSCRIBE_GAME_CHANGE,
+                    variables: {id},
+                    updateQuery: (prev, {subscriptionData}) => {
+                        if (!subscriptionData.data) return prev;
 
-    useEffect(() => {
-        setEntrance(true)
-    }, [])
+                        if (subscriptionData.data.trackGameStatus.status === GameStatus.ENDED) {
+                            setTimeout(3);
+                            setOpen(true)
+                        }
+
+                        return prev;
+                    }
+                })
+            }
+        })
 
     const {height, width} = useWindowDimensions();
     const h = height - theme.spacing(4)
@@ -111,7 +216,31 @@ function WatchGame(props) {
 
     const top = (height - 1080.0 * scale) / 2.0
     const left = (width - 1920.0 * scale) / 2.0
+
     const classes = useStyles({scale, top, left});
+
+    const goBack = e => {
+        history.goBack()
+    }
+
+    React.useEffect(() => {
+        const timer =
+            timeout > 0 && setInterval(() => setTimeout(timeout - 1), 1000);
+        return () => clearInterval(timer);
+    }, [timeout]);
+
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setOpen(false);
+        goBack(event);
+    };
+
+    const handleCloseCancel = (e) => {
+        setOpen(false);
+    }
 
     if (loading) return <LoadingPage/>
     if (error) return <Error className={props.className} error={error}/>
@@ -128,31 +257,62 @@ function WatchGame(props) {
                 width="1920px"
                 frameBorder="0"/>
 
-            <AppBar className={classes.app} position="static">
-                <Toolbar variant="dense">
-                    <Grid container
-                          direction="row"
-                          justify="center"
-                          alignItems="stretch">
-                        <Grid item xs>
-                            <AgentAvatar agent={playerOne}/>
-                        </Grid>
-                        <Grid item xs>
-                            <Typography variant="h6" color="inherit">
-                                {playerOne.name}
-                            </Typography>
-                        </Grid>
-                        <Grid item xs>
-                            <Typography className={classes.floatLeft} variant="h6" color="inherit">
-                                {playerTwo.name}
-                            </Typography>
-                        </Grid>
-                        <Grid item xs>
-                            <AgentAvatar className={classes.floatLeft} agent={playerTwo}/>
-                        </Grid>
-                    </Grid>
-                </Toolbar>
-            </AppBar>
+            <Paper elevation={5} className={classes.leftBottomPanel}
+                   style={{borderColor: Colors.hashStringToColor(playerOne.id)}}>
+                <AgentAvatar className={classes.panelAvatar} agent={playerOne}/>
+                <Typography className={classes.panelText} variant="h6" color="inherit">
+                    {playerOne.name}
+                </Typography>
+                <Typography className={classes.leftPanelText}
+                            style={{
+                                backgroundColor: Colors.hashStringToColor(playerOne.id),
+                                color: theme.palette.getContrastText(Colors.hashStringToColor(playerOne.id)),
+                                borderColor: Colors.hashStringToColor(playerOne.id)
+                            }}
+                            variant="h6"
+                            color="inherit">
+                    Player1
+                </Typography>
+            </Paper>
+            <Paper elevation={5} className={classes.rightBottomPanel}
+                   style={{borderColor: Colors.hashStringToColor(playerTwo.id)}}>
+                <AgentAvatar className={classes.panelAvatar} agent={playerTwo}/>
+                <Typography className={classes.panelText} variant="h6" color="inherit">
+                    {playerTwo.name}
+                </Typography>
+                <Typography className={classes.rightPanelText}
+                            style={{
+                                backgroundColor: Colors.hashStringToColor(playerTwo.id),
+                                color: theme.palette.getContrastText(Colors.hashStringToColor(playerTwo.id)),
+                                borderColor: Colors.hashStringToColor(playerTwo.id)
+                            }}
+                            variant="h6" color="inherit">
+                    Player2
+                </Typography>
+            </Paper>
+            <Fab color="primary"
+                 size="medium"
+                 style={{margin: theme.spacing(2)}}
+                 onClick={goBack}>
+                <ArrowBackIcon/>
+            </Fab>
+            <Snackbar
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                }}
+                open={open}
+                autoHideDuration={3500}
+                onClose={handleClose}
+                message={`The game will close in ${timeout}`}
+                action={
+                    <React.Fragment>
+                        <Button color="secondary" size="small" onClick={handleCloseCancel}>
+                            CANCEL
+                        </Button>
+                    </React.Fragment>
+                }
+            />
         </Fragment>
     );
 }

@@ -54,7 +54,7 @@ function GameList(props) {
     const [hasMore, setHasMore] = useState(false)
     const [fetchMoreError, setFetchMoreError] = useState()
     const [fetchMoreLoading, setFetchMoreLoading] = useState(false)
-    const {loading, error, data, fetchMore, subscribeToMore} = useQuery(Query.GAMES_QUERY,
+    const {loading, error, data, fetchMore, subscribeToMore, refetch} = useQuery(Query.GAMES_QUERY,
         {
             variables: {
                 filterStatus: props.gameStatus,
@@ -62,6 +62,7 @@ function GameList(props) {
                 ...props.pageSize && {first: props.pageSize},
                 orderBy: props.orderBy
             },
+            fetchPolicy: "network-only",
             onCompleted: d => {
                 setCursor(data.games.length ?
                     data.games[data.games.length - 1].id : null)
@@ -69,7 +70,6 @@ function GameList(props) {
                 subscribeToMore({
                     document: Query.SUBSCRIBE_GAMES_CHANGE,
                     updateQuery: (prev, {subscriptionData}) => {
-                        console.log("Entered")
                         if (!subscriptionData.data) return prev;
 
                         const game = subscriptionData.data.trackGames

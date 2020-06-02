@@ -61,6 +61,7 @@ function WorkgroupList(props) {
                 filterAvailable: props.available,
                 ...props.pageSize && {first: props.pageSize}
             },
+            fetchPolicy: "network-only",
             onCompleted: d => {
                 setCursor(data.workgroups.length ?
                     data.workgroups[data.workgroups.length - 1].id : null)
