@@ -39,10 +39,10 @@ services:
     ports:
       - "4000:4000"
     environment:
-      GAME_SERVER_URL: "http://192.168.1.3:9080"
+      GAME_SERVER_URL: "http://192.168.1.6:9080"
       SERVER_PUBLIC_KEY: 3Mwdw6EJmhYDiYZpae3ch8uo
       SERVER_PRIVATE_KEY: oYBwXDDVKBwTkBaVUv5J3EqM
       AI_PUBLIC_KEY: gQBbBxeWox38mx5h9rmqutCz
-      PRISMA_URL: "http://192.168.1.3:4466"
+      PRISMA_URL: "http://192.168.1.6:4466"
 volumes:
   aibg_mongo:
